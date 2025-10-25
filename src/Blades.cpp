@@ -47,6 +47,12 @@ Blades::Blades(Device* device, VkCommandPool commandPool, float planeDim) : Mode
     BufferUtils::CreateBufferFromData(device, commandPool, blades.data(), NUM_BLADES * sizeof(Blade), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, bladesBuffer, bladesBufferMemory);
     BufferUtils::CreateBuffer(device, NUM_BLADES * sizeof(Blade), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, culledBladesBuffer, culledBladesBufferMemory);
     BufferUtils::CreateBufferFromData(device, commandPool, &indirectDraw, sizeof(BladeDrawIndirect), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, numBladesBuffer, numBladesBufferMemory);
+
+    ModelBufferObject modelBufferObject;
+    modelBufferObject.modelMatrix = glm::mat4(1.0f);
+
+    BufferUtils::CreateBufferFromData(device, commandPool, &modelBufferObject, sizeof(ModelBufferObject),
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, modelBuffer, modelBufferMemory);
 }
 
 VkBuffer Blades::GetBladesBuffer() const {
@@ -68,4 +74,9 @@ Blades::~Blades() {
     vkFreeMemory(device->GetVkDevice(), culledBladesBufferMemory, nullptr);
     vkDestroyBuffer(device->GetVkDevice(), numBladesBuffer, nullptr);
     vkFreeMemory(device->GetVkDevice(), numBladesBufferMemory, nullptr);
+
+    if (modelBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device->GetVkDevice(), modelBuffer, nullptr);
+        vkFreeMemory(device->GetVkDevice(), modelBufferMemory, nullptr);
+    }
 }

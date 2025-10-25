@@ -10,17 +10,37 @@ layout(set = 0, binding = 0) uniform CameraBufferObject {
 
 // TODO: Declare tessellation control shader inputs and outputs
 
+layout(location=0) in vec4 in_v0[];
+layout(location=1) in vec4 in_v1[];
+layout(location=2) in vec4 in_v2[];
+layout(location=3) in vec4 in_up[];
+
+layout(location=0) out vec4 v0[];
+layout(location=1) out vec4 v1[];
+layout(location=2) out vec4 v2[];
+layout(location=3) out vec4 up[];
+
+/*
+In the tessellation control shader, specify the amount of tessellation you want to occur. 
+Remember that you need to provide enough detail to create the curvature of a grass blade.
+*/
+
 void main() {
 	// Don't move the origin location of the patch
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
+    v0[gl_InvocationID] = in_v0[gl_InvocationID];
+    v1[gl_InvocationID] = in_v1[gl_InvocationID];
+    v2[gl_InvocationID] = in_v2[gl_InvocationID];
+    up[gl_InvocationID] = in_up[gl_InvocationID];
+
 	// TODO: Write any shader outputs
 
 	// TODO: Set level of tesselation
-    // gl_TessLevelInner[0] = ???
-    // gl_TessLevelInner[1] = ???
-    // gl_TessLevelOuter[0] = ???
-    // gl_TessLevelOuter[1] = ???
-    // gl_TessLevelOuter[2] = ???
-    // gl_TessLevelOuter[3] = ???
+     gl_TessLevelInner[0] = 3;
+     gl_TessLevelInner[1] = 5;
+     gl_TessLevelOuter[0] = 1;
+     gl_TessLevelOuter[1] = 5;
+     gl_TessLevelOuter[2] = 1;
+     gl_TessLevelOuter[3] = 5;
 }
