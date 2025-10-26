@@ -27,14 +27,15 @@ Remember that you need to provide enough detail to create the curvature of a gra
 
 void main() {
 	// Don't move the origin location of the patch
-    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+    gl_out[gl_InvocationID].gl_Position = in_v0[gl_InvocationID];
 
+    // TODO: Write any shader outputs
     v0[gl_InvocationID] = in_v0[gl_InvocationID];
     v1[gl_InvocationID] = in_v1[gl_InvocationID];
     v2[gl_InvocationID] = in_v2[gl_InvocationID];
     up[gl_InvocationID] = in_up[gl_InvocationID];
 
-	// TODO: Write any shader outputs
+    uint tessLevel = 5;
 
 	// TODO: Set level of tesselation
      gl_TessLevelInner[0] = 3;
