@@ -58,6 +58,13 @@ bool inBounds(float value, float bounds) {
     return (value >= -bounds) && (value <= bounds);
 }
 
+bool inFrustum(vec3 p) {
+    vec4 ndcP = camera.proj * camera.view * vec4(p.xyz, 1.0);
+    // -0.8 for demoing, -0.01 for actual
+    float hCoord = ndcP.w - 0.01;
+    return (inBounds(ndcP.x, hCoord) && inBounds(ndcP.y, hCoord));
+}
+
 void main() {
 	// Reset the number of blades to 0
     if (gl_GlobalInvocationID.x == 0) {
@@ -74,18 +81,184 @@ void main() {
 
     // TODO: Apply forces on every blade and update the vertices in the buffer
 
-	// TODO: Cull blades that are too far away or not in the camera frustum and write them
-	// to the culled blades buffer
-	// Note: to do this, you will need to use an atomic operation to read and update numBlades.vertexCount
-	// You want to write the visible blades to the buffer without write conflicts between threads
-
     uint index = gl_GlobalInvocationID.x;
 
     if (index >= 8192) return;  // Replace 1024 with your actual NUM_BLADES constant
 
     Blade blade = inputBlades.blades[index];
+    const vec3 v0 = blade.v0.xyz;
+    vec3 v1 = blade.v1.xyz;
+    vec3 v2 = blade.v2.xyz;
+
+    float orientation = blade.v0.w;
+    float height = blade.v1.w;
+    float width = blade.v2.w;
+    float stiffness = blade.up.w;
     
+    vec3 up = normalize(blade.up.xyz);
+
+    /*
+    /////////////////////////////
+               Gravity
+    /////////////////////////////
+    Given a gravity direction, D.xyz, and the magnitude of acceleration, D.w, 
+    we can compute the environmental gravity in our scene as gE = normalize(D.xyz) * D.w.
+
+    We then determine the contribution of the gravity with respect to the front facing direction of the blade, f, 
+    as a term called the "front gravity". Front gravity is computed as gF = (1/4) * ||gE|| * f.
+        
+    f indicates the front direction that is perpendicular to the width of the blade
+
+    We can then determine the total gravity on the grass blade as g = gE + gF 
+    */
+
+    vec3 frontGravity;
+    vec3 gravity;
+
+    vec3 envGravity = vec3(0,-9.8,0);
+    vec3 front = normalize(cross(vec3(cos(orientation), 0, sin(orientation)), up));
+    
+    frontGravity = 0.25 * length(envGravity) * front;
+
+    gravity = envGravity + frontGravity;
+
+
+    /*
+    /////////////////////////////
+              Recovery
+    /////////////////////////////
+    In order to determine the recovery force, we need to compare the current position 
+    of v2 to its original position before simulation started, iv2. 
+    At the beginning of our simulation, v1 and v2 are initialized to be a distance of the blade height along the up vector.
+
+    Once we have iv2, we can compute the recovery forces as r = (iv2 - v2) * stiffness.
+    */
+
+    vec3 iv2 = v0 + (height * up);
+
+    vec3 recovery = (iv2 - v2) * stiffness;
+
+
+    /*
+    /////////////////////////////
+              Wind
+    /////////////////////////////
+    Once you have a wind direction and a wind alignment term, your total wind force (w) will be windDirection * windAlignment.
+    */
+
+    
+    vec3 wind = vec3(3.0,-0.7,3.0) * (sin(1.2 * totalTime) + cos(0.3 * totalTime + 100));
+    float alignDir = 1.0 - abs(dot(normalize(wind), normalize(v2-v0)));
+    float alignHeight = dot(v2-v0, up) / height;
+    wind = wind * alignDir * alignHeight;
+    
+    /*
+    // === DEBUG ONLY: force lateral oscillation ===
+    vec3 upN = normalize(up);
+    //vec3 bladeDir = normalize(max(length(v2 - v0), 1e-6) ? (v2 - v0) : vec3(cos(orientation), 0.0, sin(orientation)));
+
+    vec3 diff = v2 - v0;
+    vec3 bladeDir = (length(diff) > 1e-6)
+        ? normalize(diff)
+        : normalize(vec3(cos(orientation), 0.0, sin(orientation)));
+
+    vec3 rightAxis = cross(upN, bladeDir);
+    if (length(rightAxis) < 1e-4) {
+        rightAxis = abs(upN.x) < 0.9 ? normalize(cross(upN, vec3(1,0,0))) : normalize(cross(upN, vec3(0,0,1)));
+    } else {
+        rightAxis = normalize(rightAxis);
+    }
+
+    float amp = 0.15 * height; // amplitude relative to blade height
+    float phase = totalTime * 2.0 + orientation * 3.0;
+    vec3 forcedPos = v0 + upN * height + rightAxis * (sin(phase) * amp);
+
+    v2 = forcedPos;
+    v1 = v0 + (height * 0.5) * upN + rightAxis * (sin(phase) * amp * 0.5);
+
+    // write back
+    inputBlades.blades[index].v1.xyz = v1;
+    inputBlades.blades[index].v2.xyz = v2;
+    */
+
+    /*
+    //////////////
+    Sum the forces
+    ///////////////
+    */
+
+    
+
+    vec3 resultForce = (recovery + gravity + wind)*deltaTime;
+    //vec3 resultForce = (wind) * deltaTime;
+    v2 += resultForce;
+    v2 = v2 - up * min(dot(up,(v2-v0)), 0);
+
+    float lProj = length( v2 - v0 - up * dot(v2-v0, up));
+
+    v1 = v0 + height * up * max (1.0 - (lProj/height), 0.05 * max(lProj/height, 1.0));
+
+    float L0 = distance(v2, v0);
+    float L1 = distance(v1,v0) + distance(v1,v2);
+    float bladeLen = (L0 + L1) / 2;
+
+    float ratio = height/ bladeLen;
+
+    vec3 v1_corr = v0 + ratio*(v1-v0);
+    vec3 v2_corr = v1_corr + ratio*(v2 - v1);
+
+    blade.v1.xyz = v1_corr;
+    blade.v2.xyz = v2_corr;
+
+    inputBlades.blades[index].v1.xyz = v1_corr;
+    inputBlades.blades[index].v2.xyz = v2_corr;
+    
+    
+
+    /*
+    //////////////
+    Culling grass
+    ///////////////
+    */
+
+	// TODO: Cull blades that are too far away or not in the camera frustum and write them
+	// to the culled blades buffer
+	// Note: to do this, you will need to use an atomic operation to read and update numBlades.vertexCount
+	// You want to write the visible blades to the buffer without write conflicts between threads
+
+    // Orientation Culling
+
+    mat4 invView = inverse(camera.view);
+    vec3 camForward = vec3(invView[2]);
+
+    float dir = dot(front, camForward);
+    if (0.9 < abs(dir)) {
+        return;
+    }
+
+    // View Frustum Culling
+
+    vec3 m = 0.25 * v0 + 0.5 * v1 + 0.25 * v2;
+    bool v0_inFrustum = inFrustum(v0);
+    bool v2_inFrustum = inFrustum(v2);
+    bool m_inFrustum = inFrustum(m);
+    if (!v0_inFrustum && !v2_inFrustum && !m_inFrustum) {
+        return;
+    }
+
+    // Distance Culling
+
+    vec3 camPos = vec3(invView[3]);
+    
+    float dProj = length( v0 - camPos - up * dot(v0 - camPos, up));
+
+    float idx =  index;
+    float lod = 1;
+    float dMax = 15.0; // user defined distance to cull
+    if ( mod(idx,lod) > floor(lod * (1 - dProj/dMax))) {
+        return;
+    }
+
     uint outIndex = atomicAdd(numBlades.vertexCount, 1);
     culledBlades.blades[outIndex] = blade;
-
 }
