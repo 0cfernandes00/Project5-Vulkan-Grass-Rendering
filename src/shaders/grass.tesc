@@ -38,10 +38,10 @@ void main() {
     uint tessLevel = 5;
 
 	// TODO: Set level of tesselation
-     gl_TessLevelInner[0] = 3;
+     gl_TessLevelInner[0] = 5;
      gl_TessLevelInner[1] = 5;
-     gl_TessLevelOuter[0] = 1;
+     gl_TessLevelOuter[0] = 5;
      gl_TessLevelOuter[1] = 5;
-     gl_TessLevelOuter[2] = 1;
+     gl_TessLevelOuter[2] = 5;
      gl_TessLevelOuter[3] = 5;
 }

@@ -226,16 +226,18 @@ void main() {
 	// Note: to do this, you will need to use an atomic operation to read and update numBlades.vertexCount
 	// You want to write the visible blades to the buffer without write conflicts between threads
 
-    // Orientation Culling
 
+    // Orientation Culling
+    
     mat4 invView = inverse(camera.view);
     vec3 camForward = vec3(invView[2]);
-
+   
     float dir = dot(front, camForward);
     if (0.9 < abs(dir)) {
         return;
     }
-
+    
+    
     // View Frustum Culling
 
     vec3 m = 0.25 * v0 + 0.5 * v1 + 0.25 * v2;
@@ -245,7 +247,9 @@ void main() {
     if (!v0_inFrustum && !v2_inFrustum && !m_inFrustum) {
         return;
     }
-
+    
+    
+    
     // Distance Culling
 
     vec3 camPos = vec3(invView[3]);
@@ -258,7 +262,7 @@ void main() {
     if ( mod(idx,lod) > floor(lod * (1 - dProj/dMax))) {
         return;
     }
-
+    
     uint outIndex = atomicAdd(numBlades.vertexCount, 1);
     culledBlades.blades[outIndex] = blade;
 }
