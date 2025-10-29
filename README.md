@@ -13,10 +13,9 @@ The goal of this project was to get comfortable with Vulkan and implement [Respo
 
 ## Grass Rendering
 Each blade was represented by a bezier curve and three control points.
-<img width="675" height="517" alt="image" src="https://github.com/user-attachments/assets/6f92d856-b80e-48d8-bc11-42d679e943c6" />
+<img width="390" height="300" alt="image" src="https://github.com/user-attachments/assets/6f92d856-b80e-48d8-bc11-42d679e943c6" />
 
-![](img/grass_rendering.gif)
-
+<img src="img/grass_rendering.gif" width="400"> 
 
 ## Simulating Forces
 These forces were summed and applied in the compute shader.
@@ -28,17 +27,20 @@ These forces were summed and applied in the compute shader.
 ### Orientation Culling
 It's important to cull blades with a front vector pointing away from the camera's look vector, because the width will become zero and rendering these pixels will produce rendering artifacts.
 
-![](img/grass_rendering.gif)
+<img src="img/orientation_culling.gif" width="400"> 
+
 **Note:** Values have been adjusted to show off the effect
 
 ### Frustum Culling
 Blades the fall outside of the viewing frustrum will not be visible, and should be optimized out.
 
 ![](img/viewFrustrum_culling.gif)
+
 **Note:** Values have been adjusted to show off the effect
 
 ### Distance Culling
 Blades that are outside a defined range from camera will be optimized out.
 
 ![](img/grass_dist_occl.gif)
+
 **Note:** Values have been adjusted to show off the effect
