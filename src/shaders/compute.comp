@@ -146,40 +146,11 @@ void main() {
     Once you have a wind direction and a wind alignment term, your total wind force (w) will be windDirection * windAlignment.
     */
 
-    
     vec3 wind = vec3(3.0,-0.7,3.0) * (sin(1.2 * totalTime) + cos(0.3 * totalTime + 100));
     float alignDir = 1.0 - abs(dot(normalize(wind), normalize(v2-v0)));
     float alignHeight = dot(v2-v0, up) / height;
     wind = wind * alignDir * alignHeight;
-    
-    /*
-    // === DEBUG ONLY: force lateral oscillation ===
-    vec3 upN = normalize(up);
-    //vec3 bladeDir = normalize(max(length(v2 - v0), 1e-6) ? (v2 - v0) : vec3(cos(orientation), 0.0, sin(orientation)));
 
-    vec3 diff = v2 - v0;
-    vec3 bladeDir = (length(diff) > 1e-6)
-        ? normalize(diff)
-        : normalize(vec3(cos(orientation), 0.0, sin(orientation)));
-
-    vec3 rightAxis = cross(upN, bladeDir);
-    if (length(rightAxis) < 1e-4) {
-        rightAxis = abs(upN.x) < 0.9 ? normalize(cross(upN, vec3(1,0,0))) : normalize(cross(upN, vec3(0,0,1)));
-    } else {
-        rightAxis = normalize(rightAxis);
-    }
-
-    float amp = 0.15 * height; // amplitude relative to blade height
-    float phase = totalTime * 2.0 + orientation * 3.0;
-    vec3 forcedPos = v0 + upN * height + rightAxis * (sin(phase) * amp);
-
-    v2 = forcedPos;
-    v1 = v0 + (height * 0.5) * upN + rightAxis * (sin(phase) * amp * 0.5);
-
-    // write back
-    inputBlades.blades[index].v1.xyz = v1;
-    inputBlades.blades[index].v2.xyz = v2;
-    */
 
     /*
     //////////////
@@ -187,10 +158,8 @@ void main() {
     ///////////////
     */
 
-    
 
     vec3 resultForce = (recovery + gravity + wind)*deltaTime;
-    //vec3 resultForce = (wind) * deltaTime;
     v2 += resultForce;
     v2 = v2 - up * min(dot(up,(v2-v0)), 0);
 
