@@ -9,9 +9,9 @@ Vulkan Grass Rendering
 
 ### Overview
 
-The goal of this project was to get comfortable with Vulkan and implement [Responsive Real-Time Grass Rendering for General 3D Scenes](https://www.cg.tuwien.ac.at/research/publications/2017/JAHRMANN-2017-RRTG/JAHRMANN-2017-RRTG-draft.pdf). I am responsible for implementing the grass vertex, grass tesselation control/evaluate, grass fragment, and compute shaders.
+The goal of this project was to get comfortable with Vulkan and implement [Responsive Real-Time Grass Rendering for General 3D Scenes](https://www.cg.tuwien.ac.at/research/publications/2017/JAHRMANN-2017-RRTG/JAHRMANN-2017-RRTG-draft.pdf). I am responsible for implementing the grass vertex, grass tessellation control/evaluate, grass fragment, and compute shaders.
 
-In order to build the project, I made updates to CMakeLists.txt and updated the glfw folder to pull in the most recent from this repository [](https://github.com/glfw/glfw)
+In order to build the project, I made updates to CMakeLists.txt and updated the glfw folder to pull in the most recent from this repository https://github.com/glfw/glfw
 
 <img src="img/final_output.gif" width="450"> 
 
@@ -36,11 +36,14 @@ Gravity is implemented as the summation of environmental and "front" facing grav
 
 ### Recovery
 
-Recovery acts as a targeting force to bring the blade back to its starting position.
+Recovery acts as a targeting force to bring the blade back to its starting position. The paper includes collisions, but my implementation was just influenced by the v2's current position, starting position, and a stiffness coefficient.
+
+<img width="336" height="55" alt="image" src="https://github.com/user-attachments/assets/b104b6e4-b528-4110-bbad-4f80c6d13ede" />
+
 
 ### Wind
 
-I simulated wind to be the combination of a wind direction and wind alignment. Blades with a forward vector aligned with the wind direction recieved more of an impact from the wind. Sin and Cosine waves that change over time were used to produce the waves.
+I simulated wind to be the combination of a wind direction and wind alignment. Blades with a forward vector aligned with the wind direction received more of an impact from the wind. Sin and Cosine waves that change over time were used to produce the waves.
 
 <img width="338" height="281" alt="image" src="https://github.com/user-attachments/assets/23c0f349-bac3-4883-9784-a394f1eb6388" />
 
@@ -49,17 +52,17 @@ I simulated wind to be the combination of a wind direction and wind alignment. B
 ## Culling
 
 ### Orientation Culling
-It's important to cull blades with a front vector pointing away from the camera's look vector, because the width will become zero and rendering these pixels will produce rendering artifacts.
+Culls the blades with a front vector pointing away from the camera's look vector, because the width will become zero and rendering these pixels will produce rendering artifacts.
 
 <img src="img/orientation_culling.gif" width="450"> 
 
-### Frustum Culling
-Blades the fall outside of the viewing frustrum will not be visible, and should be optimized out.
+### View Frustum Culling
+Culls the blades that fall outside of the viewing frustum as they will not be visible.
 
 <img src="img/viewFrustrum_culling.gif" width="450"> 
 
 ### Distance Culling
-Blades that are outside a defined range from camera will be optimized out.
+Culls the blades that are outside a defined range from the camera.
 
 <img src="img/grass_dist_occl.gif" width="450"> 
 
@@ -70,7 +73,7 @@ Culling Impact
 
 <img src="img/numblades.png" width="450"> 
 
-I tested different scene sizes with all three culling effects applied and compared that with out those optimizations. This result was perhaps the most confusing, I had assumed the benefits of culling would outweigh the costs. In smaller scenes especially the opposite was true. In larger scenes the two results were comparable.
+I tested different scene sizes with all three culling effects applied and compared that without those optimizations. This result was perhaps the most confusing, I had assumed the benefits of culling would outweigh the costs. In smaller scenes especially the opposite was true. In larger scenes the two results were comparable.
 
 Culling Technique Breakdown
 
