@@ -11,6 +11,8 @@ Vulkan Grass Rendering
 
 The goal of this project was to get comfortable with Vulkan and implement [Responsive Real-Time Grass Rendering for General 3D Scenes](https://www.cg.tuwien.ac.at/research/publications/2017/JAHRMANN-2017-RRTG/JAHRMANN-2017-RRTG-draft.pdf). I am responsible for implementing the grass vertex, grass tesselation control/evaluate, grass fragment, and compute shaders.
 
+In order to build the project, I made updates to CMakeLists.txt and updated the glfw folder to pull in the most recent from this repository [](https://github.com/glfw/glfw)
+
 <img src="img/final_output.gif" width="450"> 
 
 ## Grass Rendering
