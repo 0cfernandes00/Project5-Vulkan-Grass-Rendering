@@ -9,12 +9,13 @@ Vulkan Grass Rendering
 
 ### Overview
 
-The goal of this project was to get comfortable with Vulkan and implement [Responsive Real-Time Grass Rendering for General 3D Scenes](https://www.cg.tuwien.ac.at/research/publications/2017/JAHRMANN-2017-RRTG/JAHRMANN-2017-RRTG-draft.pdf). I am responsible for implementing the grass vertex, tesselation control/evaluate, fragment, and compute shaders.
+The goal of this project was to get comfortable with Vulkan and implement [Responsive Real-Time Grass Rendering for General 3D Scenes](https://www.cg.tuwien.ac.at/research/publications/2017/JAHRMANN-2017-RRTG/JAHRMANN-2017-RRTG-draft.pdf). I am responsible for implementing the grass vertex, grass tesselation control/evaluate, grass fragment, and compute shaders.
 
-<img src="img/final_output" width="450"> 
+<img src="img/final_output.gif" width="450"> 
 
 ## Grass Rendering
-Each blade was represented by a bezier curve and three control points.
+Each blade was represented by a bezier curve and three control points. De Castelajau's algorithm was used to construct the curve, and generate the triangle representation.
+
 <img width="390" height="300" alt="image" src="https://github.com/user-attachments/assets/6f92d856-b80e-48d8-bc11-42d679e943c6" />
 
 <img src="img/grass_rendering.gif" width="450"> 
@@ -25,7 +26,9 @@ Each blade was represented by a bezier curve and three control points.
 These forces were summed and applied in the compute shader of the pipeline.
 
 ### Gravity
-Gravity is implemented as the summation of environmental and "front" facing gravity (which is applied to the front viewing vector of the blade).
+Gravity is implemented as the summation of environmental and "front" facing gravity (which is applied to the front viewing vector of the blade). 
+
+<img width="209" height="72" alt="image" src="https://github.com/user-attachments/assets/81debb17-2adf-4146-a9b5-b5484407c6c0" />
 
 <img src="img/gravity.gif" width="450"> 
 
@@ -35,7 +38,9 @@ Recovery acts as a targeting force to bring the blade back to its starting posit
 
 ### Wind
 
-I simulated wind to be the combination of a wind direction and wind alignment. Blades with a forward vector aligned with the wind direction recieved more of an impact from the wind.
+I simulated wind to be the combination of a wind direction and wind alignment. Blades with a forward vector aligned with the wind direction recieved more of an impact from the wind. Sin and Cosine waves that change over time were used to produce the waves.
+
+<img width="338" height="281" alt="image" src="https://github.com/user-attachments/assets/23c0f349-bac3-4883-9784-a394f1eb6388" />
 
 <img src="img/wind.gif" width="450"> 
 
@@ -57,6 +62,16 @@ Blades that are outside a defined range from camera will be optimized out.
 <img src="img/grass_dist_occl.gif" width="450"> 
 
 ## Performance Analysis
+I tested using values suggested by the paper, however, the performance results did not match my expectations. Further turning of the parameters could reveal more obvious trends.
 
-TODO: Your renderer handles varying numbers of grass blades
-TODO: The improvement you get by culling using each of the three culling tests
+Culling Impact
+
+<img src="img/numblades.png" width="450"> 
+
+I tested different scene sizes with all three culling effects applied and compared that with out those optimizations. This result was perhaps the most confusing, I had assumed the benefits of culling would outweigh the costs. In smaller scenes especially the opposite was true. In larger scenes the two results were comparable.
+
+Culling Technique Breakdown
+
+<img src="img/cullmethod.png" width="600"> 
+
+Culling by blade orientation seemed to have the largest impact with smaller scenes, whereas with larger scenes the viewing frustum optimization seemed to be the most impactful.
